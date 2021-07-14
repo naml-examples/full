@@ -1,55 +1,38 @@
-# Simple Application
+# Full Application
 
-A basic example of how to build a [naml](https://github.com/kris-nova/naml) project.
+A broader example of how to build a [naml](https://github.com/kris-nova/naml) project.
 
-## app.go
+This is yet another example of the flexibility with naml.
 
-Every project should define an `app.go` file.
-
-The file should implement the `v0.2.0` `Deployable{}` interface.
+In this example we have a large set of configurable values (similar to a `Values.yaml` file) that we expose in the codebase.
 
 ```go
+// MySampleAppPublic can be used for any public (or exported) facing mechanisms.
+// - Kubernetes Custom Resources
+// - Alternative to Values.yaml
+// - Exposed over an HTTP API
+// - Exposed over a gRPC API
+//
+// Here is where you could define a large amount of values that another mechanism could "tweak" or "configure"
+// just like a Values.yaml.
+//
+// By making this (and the sub fields) exported we could expose this to other Go packages or even to a Kubernetes
+// custom resource.
+type MySampleAppPublic struct {
 
-// Deployable v0.2.0
-type Deployable interface {
+	// In case anyone is wondering this is "the new Values.yaml" as long as you plumb the fields
+	// through in the "implementation" below.
 
-    // Install will attempt to install in Kubernetes
-    Install(client *kubernetes.Clientset) error
-
-    // Uninstall will attempt to uninstall in Kubernetes
-    Uninstall(client *kubernetes.Clientset) error
-
-    // Meta returns the Kubernetes native ObjectMeta which is used to manage applications with naml.
-    Meta() *v1.ObjectMeta
-    
-    // Description of your application
-    Description() string
+	ExampleValue string // See line 84, and line 110
+	ExampleNumber int
+	ExampleText string
+	ExampleToggle bool
+	ExampleVerbose int
+	ExampleName string
+	ExampleAnnotations map[string]string
+	ExampleValues map[int]string
+	ExampleValue1 string
+	ExampleValue2 string
+	ExampleValue3 string
 }
 ```
-
-## app_test.go
-
-We encourage everyone to also test their applications.
-
-```go 
-// TestAppName shows how you can test arbitrary parts of your application.
-func TestAppName(t *testing.T) {
-	app := New("default", "sample-app", "beeps-boops", 2)
-	if app.Name != "sample-app" {
-		t.Errorf(".Name is not plumbed through from New()")
-	}
-}
-```
-
-## cmd package
-
-You can also take advantage of the default CLI tooling for `naml`.
-
-```go
-func main() {
-	a := app.New("default", "simple-app", "beeps-boops", 17)
-	naml.Register(a)
-	err := cmd.RunCLI()
-}
-```
-
