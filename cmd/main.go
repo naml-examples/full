@@ -13,12 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-//    ███╗   ██╗ ██████╗ ██╗   ██╗ █████╗
-//    ████╗  ██║██╔═████╗██║   ██║██╔══██╗
-//    ██╔██╗ ██║██║██╔██║██║   ██║███████║
-//    ██║╚██╗██║████╔╝██║╚██╗ ██╔╝██╔══██║
-//    ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║
-//    ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝
+//   ███╗   ██╗ █████╗ ███╗   ███╗██╗
+//   ████╗  ██║██╔══██╗████╗ ████║██║
+//   ██╔██╗ ██║███████║██╔████╔██║██║
+//   ██║╚██╗██║██╔══██║██║╚██╔╝██║██║
+//   ██║ ╚████║██║  ██║██║ ╚═╝ ██║███████╗
+//   ╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝
+//
 
 package main
 
@@ -32,8 +33,26 @@ import (
 
 // main is the main entry point for your CLI application
 func main() {
-	// Define your application
-	a := app.New("default", "simple-app", "a great app", "beeps-boops", 17)
+	// Define your application.
+	//
+	// All of these are "Exported" and therefor can be a Kubernetes custom resource
+	// or be thought of as a Values.yaml
+	publicApp := &app.MySampleAppPublic{
+		ExampleValue:       "",
+		ExampleNumber:      0,
+		ExampleText:        "",
+		ExampleToggle:      false,
+		ExampleVerbose:     0,
+		ExampleName:        "",
+		ExampleAnnotations: nil,
+		ExampleValues:      nil,
+		ExampleValue1:      "",
+		ExampleValue2:      "",
+		ExampleValue3:      "",
+	}
+
+	// Pass the public app fields to the New() function
+	a := app.New("my-name", "my-namespace", "my-description", publicApp)
 
 	// Register your application with naml
 	naml.Register(a)

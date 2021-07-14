@@ -13,12 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-//    ███╗   ██╗ ██████╗ ██╗   ██╗ █████╗
-//    ████╗  ██║██╔═████╗██║   ██║██╔══██╗
-//    ██╔██╗ ██║██║██╔██║██║   ██║███████║
-//    ██║╚██╗██║████╔╝██║╚██╗ ██╔╝██╔══██║
-//    ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║
-//    ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝
+//   ███╗   ██╗ █████╗ ███╗   ███╗██╗
+//   ████╗  ██║██╔══██╗████╗ ████║██║
+//   ██╔██╗ ██║███████║██╔████╔██║██║
+//   ██║╚██╗██║██╔══██║██║╚██╔╝██║██║
+//   ██║ ╚████║██║  ██║██║ ╚═╝ ██║███████╗
+//   ╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝
+//
 
 package app
 
@@ -37,14 +38,54 @@ import (
 
 var Version string
 
+// MySampleApp is the purest and most true form of an application. In this example
+// we keep SOME of the field unexported (lowercase) so that they are only accessible by this
+// package.
 type MySampleApp struct {
 	metav1.ObjectMeta
 	exampleString string
 	exampleInt    int
 	description   string
+	public *MySampleAppPublic
 }
 
-func New(namespace string, name string, description string, exampleString string, exampleInt int) *MySampleApp {
+// MySampleAppPublic can be used for any public (or exported) facing mechanisms.
+// - Kubernetes Custom Resources
+// - Alternative to Values.yaml
+// - Exposed over an HTTP API
+// - Exposed over a gRPC API
+//
+// Here is where you could define a large amount of values that another mechanism could "tweak" or "configure"
+// just like a Values.yaml.
+//
+// By making this (and the sub fields) exported we could expose this to other Go packages or even to a Kubernetes
+// custom resource.
+type MySampleAppPublic struct {
+
+	// In case anyone is wondering this is "the new Values.yaml" as long as you plumb the fields
+	// through in the "implementation" below.
+
+	ExampleValue string // See line 84, and line 110
+	ExampleNumber int
+	ExampleText string
+	ExampleToggle bool
+	ExampleVerbose int
+	ExampleName string
+	ExampleAnnotations map[string]string
+	ExampleValues map[int]string
+	ExampleValue1 string
+	ExampleValue2 string
+	ExampleValue3 string
+}
+
+// New will create a naml compatible application.
+//
+// Note: There is nothing intrinsically wrong with making all the MySampleApplication fields
+// exported (and deleting the MySampleAppPublic struct) if you wanted that functionality.
+//
+// I just suggested that we have an "exposed" and an "internal" representation of the same object. There are trade offs
+// to this approach. Feel free to do whatever you want. 🤷‍♀️
+func New(name string, namespace string, description string, publicApp *MySampleAppPublic) *MySampleApp {
 	return &MySampleApp{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            name,
@@ -53,16 +94,15 @@ func New(namespace string, name string, description string, exampleString string
 			Labels: map[string]string{
 				"k8s-app":       "mysampleapp",
 				"app":           "mysampleapp",
-				"example-label": exampleString,
-				"description":   "short-description-of-your-app",
+				"example-label": publicApp.ExampleValue, // Here we "plumb" through to our application from line 62
+				"description":   description,
 			},
-			Annotations: map[string]string{
-				"beeps": "boops",
-			},
+			Annotations: publicApp.ExampleAnnotations,
 		},
-		exampleInt:    exampleInt,
-		exampleString: exampleString,
+		exampleInt:    publicApp.ExampleNumber, // More plumbing
+		exampleString: publicApp.ExampleValue1, // More plumbing
 		description:   description,
+		public: publicApp,
 	}
 }
 
@@ -79,6 +119,7 @@ func (v *MySampleApp) Install(client *kubernetes.Clientset) error {
 			Template: apiv1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: v.Labels,
+					Name: v.public.ExampleValue, // Here we "plumb" through to our application from line 62
 				},
 				Spec: apiv1.PodSpec{
 					Containers: []apiv1.Container{
